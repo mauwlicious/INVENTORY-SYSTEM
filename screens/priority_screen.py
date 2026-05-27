@@ -11,8 +11,10 @@ GREEN        = "#1A9A4A"
 BADGE_COLORS = ["#D93333", "#E68010", "#3399D9", "#2DA65C", "#7B55CC",
                 "#C44D8A", "#1A8C6A", "#B05010"]
 
+# Konfigurasi dasar tabel yang dibagikan secara konsisten
 COL_HEADERS  = ["#", "CODE", "NAME", "PRIORITY", "CATEGORY", "QTY", "ACTION"]
-COL_WIDTHS   = [44, 100, 200, 150, 130, 55, 80]
+COL_WIDTHS   = [50, 100, 150, 150, 130, 55, 100]
+COL_ALIGNS   = ["center", "w", "w", "center", "w", "center", "center"]
 
 ROWS_PER_PAGE = 10
 
@@ -37,14 +39,14 @@ class PriorityScreen(ctk.CTkFrame):
         self._current_page     = 0
         self._all_items        = []
 
-        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(2, weight=1) # Diubah ke indeks 2 karena layout disatukan
         self.grid_columnconfigure(0, weight=1)
         self._build_layout()
         self.on_show()
 
-    # ── Build ─────────────────────────────────────────────────────────────────
+    # ── Build Layout ──────────────────────────────────────────────────────────
     def _build_layout(self):
-        # Header
+        # Header Aplikasi
         hdr = ctk.CTkFrame(self, fg_color="transparent", height=50)
         hdr.grid(row=0, column=0, sticky="ew", padx=24, pady=(16, 0))
         hdr.grid_propagate(False)
@@ -54,7 +56,7 @@ class PriorityScreen(ctk.CTkFrame):
                                        font=ctk.CTkFont(size=12), text_color=TEXT_SEC)
         self._subtitle.grid(row=1, column=0, sticky="w")
 
-        # Controls
+        # Controls (Tombol-tombol pilihan mode)
         ctrl = ctk.CTkFrame(self, fg_color="transparent")
         ctrl.grid(row=1, column=0, sticky="ew", padx=24, pady=(10, 8))
         ctrl.grid_columnconfigure(2, weight=1)
@@ -85,7 +87,7 @@ class PriorityScreen(ctk.CTkFrame):
         self._near_lbl = ctk.CTkLabel(stat_f, text="",
                                        font=ctk.CTkFont(size=12),
                                        fg_color="#FFF5E6", corner_radius=8,
-                                       text_color="#D97800", padx=10, pady=4)
+                                        text_color="#D97800", padx=10, pady=4)
         self._near_lbl.pack(side="left")
 
         ctk.CTkButton(ctrl, text="⬆ Pop Top", width=110, height=36,
@@ -93,39 +95,45 @@ class PriorityScreen(ctk.CTkFrame):
                       font=ctk.CTkFont(size=12), corner_radius=8,
                       command=self.pop_top).grid(row=0, column=3, padx=(8, 0))
 
-        # Table header (fixed, luar tabel)
+        # FIX UTAMA: Wadah besar Table Outer menampung Header sekaligus Body
+        self._table_outer = ctk.CTkFrame(self, fg_color=_table_bg(), corner_radius=8)
+        self._table_outer.grid(row=2, column=0, sticky="nsew", padx=24, pady=(0, 4))
+        self._table_outer.grid_columnconfigure(0, weight=1)
+        self._table_outer.grid_rowconfigure(1, weight=1) # Row 0 untuk Header, Row 1 untuk isi tabel
+
+        # Build Table Header di dalam table_outer
         self._build_table_header()
 
-        # Table body — fg_color dinamis
-        self._table_outer = ctk.CTkFrame(self, fg_color=_table_bg(), corner_radius=8)
-        self._table_outer.grid(row=3, column=0, sticky="nsew", padx=24, pady=(0, 4))
-        self._table_outer.grid_columnconfigure(0, weight=1)
-        self._table_outer.grid_rowconfigure(0, weight=1)
-
-        # _table: satu kolom penampung row_frame
+        # Build Table Body di dalam table_outer (Row 1)
         self._table = ctk.CTkFrame(self._table_outer, fg_color="transparent")
-        self._table.grid(row=0, column=0, sticky="nsew")
+        self._table.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
         self._table.grid_columnconfigure(0, weight=1)
 
         self._build_pagination_bar()
 
     def _build_table_header(self):
-        self._tbl_hdr = ctk.CTkFrame(self, fg_color=PRIMARY, corner_radius=8, height=34)
-        self._tbl_hdr.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 2))
+        # Header diletakkan di row=0 dalam table_outer dengan padding internal yang presisi
+        self._tbl_hdr = ctk.CTkFrame(self._table_outer, fg_color=PRIMARY, corner_radius=8, height=34)
+        self._tbl_hdr.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 4))
         self._tbl_hdr.grid_propagate(False)
         self._priority_hdr_lbl = None
-        for i, (col, w) in enumerate(zip(COL_HEADERS, COL_WIDTHS)):
-            self._tbl_hdr.grid_columnconfigure(i, minsize=w, weight=1 if col == "NAME" else 0)
+        
+        for i, (col, w, align) in enumerate(zip(COL_HEADERS, COL_WIDTHS, COL_ALIGNS)):
+            # FIX: Ditambahkan uniform="table_col" untuk mengunci perhitungan pembagian piksel grid
+            self._tbl_hdr.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
+            
             lbl = ctk.CTkLabel(self._tbl_hdr, text=col,
                                 font=ctk.CTkFont(size=11, weight="bold"),
-                                text_color="#FFFFFF", anchor="center")
-            lbl.grid(row=0, column=i, sticky="ew", padx=6, pady=7)
+                                text_color="#FFFFFF", anchor=align)
+            # Menggunakan sticky="nsew" agar sel label melebar sempurna mengikuti grid uniform
+            lbl.grid(row=0, column=i, sticky="nsew", padx=6, pady=4)
+            
             if col == "PRIORITY":
                 self._priority_hdr_lbl = lbl
 
     def _build_pagination_bar(self):
         bar = ctk.CTkFrame(self, fg_color="transparent", height=40)
-        bar.grid(row=4, column=0, sticky="ew", padx=24, pady=(2, 12))
+        bar.grid(row=3, column=0, sticky="ew", padx=24, pady=(2, 12))
         bar.grid_columnconfigure(1, weight=1)
 
         self._prev_btn = ctk.CTkButton(bar, text="◀ Prev", width=90, height=30,
@@ -144,7 +152,7 @@ class PriorityScreen(ctk.CTkFrame):
                                         command=self._next_page)
         self._next_btn.grid(row=0, column=2, padx=(8, 0))
 
-    # ── Data ──────────────────────────────────────────────────────────────────
+    # ── Data & Render ─────────────────────────────────────────────────────────
     def on_show(self):
         self._table_outer.configure(fg_color=_table_bg())
         self.set_mode(self.mode)
@@ -212,32 +220,34 @@ class PriorityScreen(ctk.CTkFrame):
         bg = _row_bg(row_idx % 2 == 0)
 
         row_frame = ctk.CTkFrame(self._table, fg_color=bg, corner_radius=6)
-        row_frame.grid(row=row_idx, column=0, sticky="ew", pady=1)
+        row_frame.grid(row=row_idx, column=0, sticky="ew", pady=2)
 
-        # Konfigurasi kolom SAMA persis dengan header
-        for i, (col, w) in enumerate(zip(COL_HEADERS, COL_WIDTHS)):
-            row_frame.grid_columnconfigure(i, minsize=w, weight=1 if col == "NAME" else 0)
+        for i, w in enumerate(COL_WIDTHS):
+            # FIX: Ditambahkan uniform="table_col" agar pembagian rasio lebar identik dengan Header
+            row_frame.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
 
-        # Rank badge
+        # Col 0: Rank badge (Bentuk lingkaran/kotak fix -> Gunakan sticky="")
         badge_col = BADGE_COLORS[row_idx % len(BADGE_COLORS)]
         badge = ctk.CTkFrame(row_frame, fg_color=badge_col, corner_radius=14,
                               width=28, height=28)
-        badge.grid(row=0, column=0, padx=8, pady=6)
+        badge.grid(row=0, column=0, sticky="", padx=6, pady=6) 
         badge.grid_propagate(False)
         ctk.CTkLabel(badge, text=str(absolute_idx + 1),
                      font=ctk.CTkFont(size=10, weight="bold"),
                      text_color="#FFFFFF").place(relx=0.5, rely=0.5, anchor="center")
 
+        # Col 1: Code (Text -> Gunakan sticky="nsew")
         ctk.CTkLabel(row_frame, text=item.get("code", ""),
                      font=ctk.CTkFont(size=11, weight="bold"),
-                     text_color=PRIMARY, fg_color="transparent", anchor="w").grid(
-            row=0, column=1, sticky="ew", padx=4, pady=6)
+                     text_color=PRIMARY, anchor=COL_ALIGNS[1]).grid(
+            row=0, column=1, sticky="nsew", padx=6, pady=6)
 
+        # Col 2: Name (Text -> Gunakan sticky="nsew")
         ctk.CTkLabel(row_frame, text=item.get("name", ""),
-                     font=ctk.CTkFont(size=11), fg_color="transparent", anchor="w").grid(
-            row=0, column=2, sticky="ew", padx=4, pady=6)
+                     font=ctk.CTkFont(size=11), anchor=COL_ALIGNS[2]).grid(
+            row=0, column=2, sticky="nsew", padx=6, pady=6)
 
-        # PRIORITY value
+        # Col 3: PRIORITY value (Text -> Gunakan sticky="nsew")
         if self.mode.startswith("price"):
             pval = f"Rp {item.get('price', 0):,.0f}".replace(",", ".")
             pcol = PRIMARY
@@ -252,27 +262,30 @@ class PriorityScreen(ctk.CTkFrame):
 
         ctk.CTkLabel(row_frame, text=pval,
                      font=ctk.CTkFont(size=11, weight="bold"),
-                     text_color=pcol, fg_color="transparent", anchor="center").grid(
-            row=0, column=3, sticky="ew", padx=4, pady=6)
+                     text_color=pcol, anchor=COL_ALIGNS[3]).grid(
+            row=0, column=3, sticky="nsew", padx=6, pady=6)
 
+        # Col 4: Category (Text -> Gunakan sticky="nsew")
         ctk.CTkLabel(row_frame, text=item.get("category", ""),
                      font=ctk.CTkFont(size=11), text_color=TEXT_SEC,
-                     fg_color="transparent", anchor="w").grid(
-            row=0, column=4, sticky="ew", padx=4, pady=6)
+                     anchor=COL_ALIGNS[4]).grid(
+            row=0, column=4, sticky="nsew", padx=6, pady=6)
 
+        # Col 5: QTY (Text -> Gunakan sticky="nsew")
         ctk.CTkLabel(row_frame, text=str(item.get("qty", 0)),
-                     font=ctk.CTkFont(size=11), fg_color="transparent",
-                     anchor="center").grid(row=0, column=5, sticky="ew", padx=4, pady=6)
+                     font=ctk.CTkFont(size=11),
+                     anchor=COL_ALIGNS[5]).grid(row=0, column=5, sticky="nsew", padx=6, pady=6)
 
+        # Col 6: Action Button (Tombol ukuran fix -> Gunakan sticky="")
         code = item.get("code", "")
-        ctk.CTkButton(row_frame, text="Pop ✕", width=62, height=26,
-                      fg_color="#FFECEC", text_color=RED,
-                      hover_color="#FFD5D5", corner_radius=6,
-                      font=ctk.CTkFont(size=11),
-                      command=lambda c=code: self._pop_item(c)).grid(
-            row=0, column=6, padx=6, pady=6)
+        btn = ctk.CTkButton(row_frame, text="Pop ✕", width=62, height=26,
+                             fg_color="#FFECEC", text_color=RED,
+                             hover_color="#FFD5D5", corner_radius=6,
+                             font=ctk.CTkFont(size=11),
+                             command=lambda c=code: self._pop_item(c))
+        btn.grid(row=0, column=6, sticky="", padx=6, pady=6)
 
-    # ── Pagination ────────────────────────────────────────────────────────────
+    # ── Pagination & Actions ──────────────────────────────────────────────────
     def _prev_page(self):
         if self._current_page > 0:
             self._current_page -= 1
@@ -283,7 +296,6 @@ class PriorityScreen(ctk.CTkFrame):
             self._current_page += 1
             self._render_page()
 
-    # ── Actions ───────────────────────────────────────────────────────────────
     def pop_top(self):
         pq = self._get_pq()
         try:

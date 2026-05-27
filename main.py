@@ -1,33 +1,65 @@
-# main.py — Entry point PT ABC Inventory System (CustomTkinter)
-import os
+# main.py — Entry point PT ABC Inventory System
+import os, json
 import customtkinter as ctk
 from inventory_manager import InventoryManager
+from sales_manager      import SalesManager
 from screens.login_screen import LoginScreen
-from screens.index_screen import IndexScreen
+from screens.index_screen  import IndexScreen
 
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
-VALID_EMAIL    = None
-VALID_PASSWORD = None
+USERS_DB      = {}   # {email: password}
+REMEMBER_DATA = {"email": "", "password": "", "remember": False}
+
 
 def load_env():
-    global VALID_EMAIL, VALID_PASSWORD
-    for fname in [".env.txt", "_env.txt"]:
+    """Baca semua user dari _env.txt (format USER_EMAIL / USER_PASSWORD berpasangan)."""
+    global USERS_DB
+    for fname in ["_env.txt", ".env.txt"]:
         if os.path.exists(fname):
-            with open(fname) as f:
+            with open(fname, encoding="utf-8") as f:
+                current_email = None
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith("#"):
-                        continue
+                    if not line or line.startswith("#"): continue
                     if "=" in line:
                         k, v = line.split("=", 1)
                         k, v = k.strip(), v.strip()
                         if k == "USER_EMAIL":
-                            VALID_EMAIL = v
-                        elif k == "USER_PASSWORD":
-                            VALID_PASSWORD = v
+                            current_email = v
+                            USERS_DB[v]   = ""
+                        elif k == "USER_PASSWORD" and current_email:
+                            USERS_DB[current_email] = v
             break
+    if not USERS_DB:
+        print("[WARN] Tidak ada user di _env.txt — gunakan fallback")
+        USERS_DB["admin@mail.com"] = "rahasia123"
+
+
+def load_remember_me():
+    global REMEMBER_DATA
+    try:
+        if os.path.exists(".remember.json"):
+            with open(".remember.json", "r", encoding="utf-8") as f:
+                REMEMBER_DATA = json.load(f)
+    except Exception as e:
+        print(f"[WARN] Gagal baca remember: {e}")
+        REMEMBER_DATA = {"email":"","password":"","remember":False}
+
+
+def save_remember_me(email: str, password: str, remember: bool):
+    global REMEMBER_DATA
+    REMEMBER_DATA = {
+        "email":    email    if remember else "",
+        "password": password if remember else "",
+        "remember": remember,
+    }
+    try:
+        with open(".remember.json", "w", encoding="utf-8") as f:
+            json.dump(REMEMBER_DATA, f)
+    except Exception as e:
+        print(f"[WARN] Gagal simpan remember: {e}")
 
 
 class App(ctk.CTk):
@@ -35,13 +67,12 @@ class App(ctk.CTk):
         super().__init__()
         self.title("PT ABC — Inventory System")
         self.geometry("1100x680")
-        self.minsize(900, 600)
+        self.minsize(920, 600)
         self.resizable(True, True)
 
-        # ── Inisialisasi backend ──────────────────────────────────
         self.inventory_manager = InventoryManager()
+        self.sales_manager     = SalesManager()
 
-        # ── Container utama ──────────────────────────────────────
         self.container = ctk.CTkFrame(self, fg_color="transparent")
         self.container.pack(fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
@@ -50,14 +81,14 @@ class App(ctk.CTk):
         self._frames = {}
         self._show_login()
 
-    # ─── Screen management ───────────────────────────────────────
     def _show_login(self):
         if "login" not in self._frames:
             frame = LoginScreen(
                 self.container,
                 on_success=self._show_main,
-                valid_email=VALID_EMAIL,
-                valid_password=VALID_PASSWORD,
+                users_db=USERS_DB,
+                remember_data=REMEMBER_DATA,
+                on_remember_save=save_remember_me,
             )
             frame.grid(row=0, column=0, sticky="nsew")
             self._frames["login"] = frame
@@ -68,6 +99,7 @@ class App(ctk.CTk):
             frame = IndexScreen(
                 self.container,
                 inventory_manager=self.inventory_manager,
+                sales_manager=self.sales_manager,
                 on_logout=self._do_logout,
             )
             frame.grid(row=0, column=0, sticky="nsew")
@@ -75,10 +107,13 @@ class App(ctk.CTk):
         self._frames["main"].tkraise()
 
     def _do_logout(self):
+        if not REMEMBER_DATA.get("remember"):
+            save_remember_me("", "", False)
         self._show_login()
 
 
 if __name__ == "__main__":
     load_env()
+    load_remember_me()
     app = App()
     app.mainloop()

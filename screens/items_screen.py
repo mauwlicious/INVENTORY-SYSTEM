@@ -12,8 +12,10 @@ ORANGE     = "#D97800"
 CATEGORIES = ["Electronics", "Furniture", "Clothing", "Food & Beverage",
               "Tools", "Stationary", "Cleaning", "Medical"]
 
+# Konfigurasi proporsi & posisi tabel yang konsisten
 COL_HEADERS = ["CODE", "NAME", "CATEGORY", "QTY", "PRICE", "EXPIRY", "ACTIONS"]
 COL_WIDTHS  = [100, 150, 130, 55, 120, 100, 165]
+COL_ALIGNS  = ["w", "w", "w", "center", "e", "center", "center"]
 
 ROWS_PER_PAGE = 10
 
@@ -71,7 +73,6 @@ def show_validation_dialog(parent, errors: list):
                   corner_radius=8, command=dlg.destroy).grid(
         row=len(errors)+2, column=0, padx=24, pady=(8, 20))
 
-    # Ukuran dialog menyesuaikan jumlah error
     h = 160 + len(errors) * 28
     dlg.geometry(f"400x{h}")
 
@@ -130,13 +131,14 @@ class ItemsScreen(ctk.CTkFrame):
         self._current_page     = 0
         self._all_items        = []
 
-        self.grid_rowconfigure(3, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self._build_layout()
         self.on_show()
 
     # ── Layout ────────────────────────────────────────────────────────────────
     def _build_layout(self):
+        # Header Aplikasi
         hdr = ctk.CTkFrame(self, fg_color="transparent", height=50)
         hdr.grid(row=0, column=0, sticky="ew", padx=24, pady=(16, 0))
         hdr.grid_propagate(False)
@@ -155,6 +157,7 @@ class ItemsScreen(ctk.CTkFrame):
                       font=ctk.CTkFont(size=13), corner_radius=8,
                       command=self._open_add_dialog).grid(row=0, column=2)
 
+        # Controls & Search Bar
         frow = ctk.CTkFrame(self, fg_color="transparent")
         frow.grid(row=1, column=0, sticky="ew", padx=24, pady=(10, 6))
 
@@ -180,32 +183,38 @@ class ItemsScreen(ctk.CTkFrame):
                           width=155, height=36, corner_radius=8,
                           command=self._on_category).pack(side="left")
 
+        # Container Utama untuk Tabel
+        self._table_outer = ctk.CTkFrame(self, fg_color=_table_bg(), corner_radius=8)
+        self._table_outer.grid(row=2, column=0, sticky="nsew", padx=24, pady=(0, 4))
+        self._table_outer.grid_columnconfigure(0, weight=1)
+        self._table_outer.grid_rowconfigure(1, weight=1) # Baris 1 disiapkan untuk konten data membesar
+
+        # Header dan Body diletakkan SAMA-SAMA di dalam _table_outer
         self._build_table_header()
 
-        self._table_outer = ctk.CTkFrame(self, fg_color=_table_bg(), corner_radius=8)
-        self._table_outer.grid(row=3, column=0, sticky="nsew", padx=24, pady=(0, 4))
-        self._table_outer.grid_columnconfigure(0, weight=1)
-        self._table_outer.grid_rowconfigure(0, weight=1)
-
         self._table = ctk.CTkFrame(self._table_outer, fg_color="transparent")
-        self._table.grid(row=0, column=0, sticky="nsew")
+        self._table.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
         self._table.grid_columnconfigure(0, weight=1)
 
         self._build_pagination_bar()
 
     def _build_table_header(self):
-        hdr = ctk.CTkFrame(self, fg_color=PRIMARY, corner_radius=8, height=34)
-        hdr.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 2))
-        hdr.grid_propagate(False)
-        for i, (col, w) in enumerate(zip(COL_HEADERS, COL_WIDTHS)):
-            hdr.grid_columnconfigure(i, minsize=w, weight=1 if col == "NAME" else 0)
-            ctk.CTkLabel(hdr, text=col, font=ctk.CTkFont(size=11, weight="bold"),
-                         text_color="#FFFFFF", anchor="center").grid(
-                row=0, column=i, sticky="ew", padx=6, pady=7)
+        # Header menggunakan row=0 dari _table_outer
+        self._tbl_hdr = ctk.CTkFrame(self._table_outer, fg_color=PRIMARY, corner_radius=8, height=34)
+        self._tbl_hdr.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 4))
+        self._tbl_hdr.grid_propagate(False)
+        
+        # Menerapkan uniform group
+        for i, (col, w, align) in enumerate(zip(COL_HEADERS, COL_WIDTHS, COL_ALIGNS)):
+            self._tbl_hdr.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
+            
+            ctk.CTkLabel(self._tbl_hdr, text=col, font=ctk.CTkFont(size=11, weight="bold"),
+                         text_color="#FFFFFF", anchor=align).grid(
+                row=0, column=i, sticky="nsew", padx=6, pady=4)
 
     def _build_pagination_bar(self):
         bar = ctk.CTkFrame(self, fg_color="transparent", height=40)
-        bar.grid(row=4, column=0, sticky="ew", padx=24, pady=(2, 12))
+        bar.grid(row=3, column=0, sticky="ew", padx=24, pady=(2, 12))
         bar.grid_columnconfigure(1, weight=1)
 
         self._prev_btn = ctk.CTkButton(bar, text="◀ Prev", width=90, height=30,
@@ -257,18 +266,22 @@ class ItemsScreen(ctk.CTkFrame):
         return max(1, -(-len(self._all_items) // ROWS_PER_PAGE))
 
     def _render_page(self):
+        # Karena Header ada di _table_outer, kita aman menghancurkan semua isi _table tanpa menghapus header!
         for w in self._table.winfo_children():
             w.destroy()
+            
         total      = len(self._all_items)
         n_pages    = self._total_pages()
         start      = self._current_page * ROWS_PER_PAGE
         end        = min(start + ROWS_PER_PAGE, total)
         page_items = self._all_items[start:end]
+        
         self._count_lbl.configure(
             text=f"{total} items  •  showing {start+1}–{end}" if total > 0 else "No items found")
         self._page_lbl.configure(text=f"Page {self._current_page + 1} / {n_pages}")
         self._prev_btn.configure(state="normal" if self._current_page > 0 else "disabled")
         self._next_btn.configure(state="normal" if self._current_page < n_pages - 1 else "disabled")
+        
         for i, item in enumerate(page_items):
             self._add_row(i, item)
 
@@ -278,47 +291,51 @@ class ItemsScreen(ctk.CTkFrame):
         price_fmt = f"Rp {item.get('price', 0):,.0f}".replace(",", ".")
 
         row_frame = ctk.CTkFrame(self._table, fg_color=bg, corner_radius=6)
-        row_frame.grid(row=row_idx, column=0, sticky="ew", pady=1)
-        for i, (col, w) in enumerate(zip(COL_HEADERS, COL_WIDTHS)):
-            row_frame.grid_columnconfigure(i, minsize=w, weight=1 if col == "NAME" else 0)
+        row_frame.grid(row=row_idx, column=0, sticky="ew", pady=2)
+        
+        # Menerapkan uniform group yang sama persis dengan header
+        for i, w in enumerate(COL_WIDTHS):
+            row_frame.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
 
-        def lbl(text, col_i, anchor="w", color=None, bold=False):
-            kw = dict(text=text, anchor=anchor, fg_color="transparent",
-                      font=ctk.CTkFont(size=11, weight="bold" if bold else "normal"))
-            if color: kw["text_color"] = color
-            ctk.CTkLabel(row_frame, **kw).grid(row=0, column=col_i, sticky="ew", padx=6, pady=6)
+        # Col 0: CODE
+        ctk.CTkLabel(row_frame, text=item.get("code", ""), font=ctk.CTkFont(size=11, weight="bold"),
+                     text_color=PRIMARY, anchor=COL_ALIGNS[0]).grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
+        
+        # Col 1: NAME
+        ctk.CTkLabel(row_frame, text=item.get("name", ""), font=ctk.CTkFont(size=11), 
+                     anchor=COL_ALIGNS[1]).grid(row=0, column=1, sticky="nsew", padx=6, pady=6)
+                     
+        # Col 2: CATEGORY
+        ctk.CTkLabel(row_frame, text=item.get("category", ""), font=ctk.CTkFont(size=11), text_color=TEXT_SEC, 
+                     anchor=COL_ALIGNS[2]).grid(row=0, column=2, sticky="nsew", padx=6, pady=6)
+                     
+        # Col 3: QTY
+        ctk.CTkLabel(row_frame, text=str(item.get("qty", 0)), font=ctk.CTkFont(size=11), 
+                     anchor=COL_ALIGNS[3]).grid(row=0, column=3, sticky="nsew", padx=6, pady=6)
+                     
+        # Col 4: PRICE
+        ctk.CTkLabel(row_frame, text=price_fmt, font=ctk.CTkFont(size=11), 
+                     anchor=COL_ALIGNS[4]).grid(row=0, column=4, sticky="nsew", padx=6, pady=6)
+                     
+        # Col 5: EXPIRY
+        ctk.CTkLabel(row_frame, text=exp_badge, font=ctk.CTkFont(size=11), text_color=exp_col, 
+                     anchor=COL_ALIGNS[5]).grid(row=0, column=5, sticky="nsew", padx=6, pady=6)
 
-        lbl(item.get("code", ""),     0, color=PRIMARY, bold=True)
-        lbl(item.get("name", ""),     1)
-        lbl(item.get("category", ""), 2, color=TEXT_SEC)
-        lbl(str(item.get("qty", 0)),  3, anchor="center")
-        lbl(price_fmt,                4, anchor="e")
-
-        ctk.CTkLabel(row_frame, text=exp_badge, anchor="center",
-                     fg_color="transparent", font=ctk.CTkFont(size=11),
-                     text_color=exp_col).grid(row=0, column=5, sticky="ew", padx=6, pady=6)
-
-        # ── Action buttons ────────────────────────────────────────────────────
+        # Col 6: ACTION buttons
         code = item.get("code", "")
         btn_f = ctk.CTkFrame(row_frame, fg_color="transparent")
-        btn_f.grid(row=0, column=6, padx=4, pady=4)
+        btn_f.grid(row=0, column=6, sticky="", padx=4, pady=4) # sticky="" agar container button rata tengah di selnya
 
-        ctk.CTkButton(btn_f, text="✏", width=36, height=26,
-                      fg_color="#E8F0FE", text_color=PRIMARY,
-                      hover_color="#C5D8FF", corner_radius=6,
-                      font=ctk.CTkFont(size=13),
+        ctk.CTkButton(btn_f, text="✏", width=36, height=26, fg_color="#E8F0FE", text_color=PRIMARY,
+                      hover_color="#C5D8FF", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda i=item: self._open_edit_dialog(dict(i))).pack(side="left", padx=2)
-
-        ctk.CTkButton(btn_f, text="📋", width=36, height=26,
-                      fg_color="#EAF7EC", text_color=GREEN,
-                      hover_color="#C5EDD0", corner_radius=6,
-                      font=ctk.CTkFont(size=13),
+                      
+        ctk.CTkButton(btn_f, text="📋", width=36, height=26, fg_color="#EAF7EC", text_color=GREEN,
+                      hover_color="#C5EDD0", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda i=item: self._open_details_dialog(dict(i))).pack(side="left", padx=2)
-
-        ctk.CTkButton(btn_f, text="🗑", width=36, height=26,
-                      fg_color="#FFECEC", text_color=RED,
-                      hover_color="#FFD5D5", corner_radius=6,
-                      font=ctk.CTkFont(size=13),
+                      
+        ctk.CTkButton(btn_f, text="🗑", width=36, height=26, fg_color="#FFECEC", text_color=RED,
+                      hover_color="#FFD5D5", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda c=code: self._confirm_delete(c)).pack(side="left", padx=2)
 
     # ── Pagination ────────────────────────────────────────────────────────────
@@ -377,7 +394,6 @@ class ItemsScreen(ctk.CTkFrame):
         field_row(6, "expiry", "Tanggal Kadaluarsa", "YYYY-MM-DD (kosongkan jika tidak ada)")
         field_row(7, "store",  "Lokasi / Gudang", "Contoh: Gudang A")
 
-        # Category dropdown
         ctk.CTkLabel(dlg, text="Kategori *", font=ctk.CTkFont(size=12),
                      text_color=TEXT_SEC).grid(row=5, column=0, padx=24, sticky="w", pady=(6,0))
         cat_var = ctk.StringVar(value="— Pilih Kategori —")
@@ -465,14 +481,11 @@ class ItemsScreen(ctk.CTkFrame):
         field_row(5, "expiry", "Tanggal Kadaluarsa",  item.get("expiry_date", ""))
         field_row(6, "store",  "Lokasi / Gudang",     item.get("lokasi", item.get("store", "")))
 
-        # Category dropdown
         ctk.CTkLabel(dlg, text="Kategori *", font=ctk.CTkFont(size=12),
                      text_color=TEXT_SEC).grid(row=4, column=0, padx=24, sticky="w", pady=(6,0))
         cat_var = ctk.StringVar(value=item.get("category", CATEGORIES[0]))
-        ctk.CTkOptionMenu(dlg, variable=cat_var,
-                           values=CATEGORIES,
-                           width=392, height=36, corner_radius=8).grid(
-            row=5, column=0, padx=24)
+        ctk.CTkOptionMenu(dlg, variable=cat_var, values=CATEGORIES,
+                           width=392, height=36, corner_radius=8).grid(row=5, column=0, padx=24)
 
         btn_row = ctk.CTkFrame(dlg, fg_color="transparent")
         btn_row.grid(row=99, column=0, padx=24, pady=(16, 20), sticky="e")
@@ -577,7 +590,7 @@ class ItemsScreen(ctk.CTkFrame):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Reusable Details Dialog (dipakai juga oleh search_screen)
+# Reusable Details Dialog
 # ─────────────────────────────────────────────────────────────────────────────
 
 def open_details_dialog(parent, item: dict):
@@ -591,7 +604,6 @@ def open_details_dialog(parent, item: dict):
     dlg.grab_set()
     dlg.grid_columnconfigure(0, weight=1)
 
-    # Header card
     top = ctk.CTkFrame(dlg, fg_color=PRIMARY, corner_radius=12)
     top.grid(row=0, column=0, padx=20, pady=(20, 0), sticky="ew")
     top.grid_columnconfigure(0, weight=1)
@@ -603,7 +615,6 @@ def open_details_dialog(parent, item: dict):
                  font=ctk.CTkFont(size=14), text_color="#C0D8F5").grid(
         row=1, column=0, padx=20, pady=(0, 14), sticky="w")
 
-    # Detail fields
     body = ctk.CTkFrame(dlg, fg_color="transparent")
     body.grid(row=1, column=0, padx=20, pady=(14, 0), sticky="nsew")
     body.grid_columnconfigure(1, weight=1)
@@ -630,5 +641,4 @@ def open_details_dialog(parent, item: dict):
 
     ctk.CTkButton(dlg, text="Tutup", width=120, height=36,
                   fg_color=PRIMARY, hover_color="#1650A0",
-                  corner_radius=8,
-                  command=dlg.destroy).grid(row=2, column=0, pady=(16, 20))
+                  corner_radius=8, command=dlg.destroy).grid(row=2, column=0, pady=(16, 20))
