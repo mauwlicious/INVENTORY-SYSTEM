@@ -1,5 +1,6 @@
 # inventory_manager.py
 import csv
+import os
 from data_structures import InventoryHashMap, InventoryPriorityQueue
 from inventory_data import load_from_csv
 
@@ -50,9 +51,68 @@ class InventoryManager:
         updated_data['code'] = code
         self.add_item(updated_data)
 
+    # ── Mekanisme Sold Out ────────────────────────────────────────────────────
+    def move_to_soldout(self, item: dict, filepath="soldout.csv"):
+        fieldnames = ["kode_item", "nama_item", "kategori", "jumlah",
+                      "harga", "satuan", "tanggal_kadaluarsa", "lokasi"]
+        file_exists = os.path.exists(filepath)
+        
+        row = {
+            "kode_item":          item.get("kode_item",  item.get("code", "")),
+            "nama_item":          item.get("nama_item",  item.get("name", "")),
+            "kategori":           item.get("kategori",   item.get("category", "")),
+            "jumlah":             0,
+            "harga":              item.get("harga",      item.get("price", 0.0)),
+            "satuan":             item.get("satuan", "pcs"),
+            "tanggal_kadaluarsa": item.get("tanggal_kadaluarsa", item.get("expiry_date", "")),
+            "lokasi":             item.get("lokasi", item.get("store", "")),
+        }
+        try:
+            with open(filepath, "a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerow(row)
+        except Exception as e:
+            print(f"[WARN] Gagal memindahkan ke soldout: {e}")
+
+    def restore_from_soldout(self, code: str, filepath="soldout.csv") -> dict:
+        if not os.path.exists(filepath):
+            return None
+            
+        restored_item = None
+        remaining_items = []
+        fieldnames = ["kode_item", "nama_item", "kategori", "jumlah",
+                      "harga", "satuan", "tanggal_kadaluarsa", "lokasi"]
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if (row.get("kode_item", "") == code or row.get("code", "") == code) and restored_item is None:
+                        restored_item = row
+                    else:
+                        remaining_items.append(row)
+                        
+            if restored_item:
+                with open(filepath, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(remaining_items)
+        except Exception as e:
+            print(f"[WARN] Gagal memulihkan dari soldout: {e}")
+            
+        if restored_item:
+            restored_item['code'] = restored_item.get('kode_item', '')
+            restored_item['name'] = restored_item.get('nama_item', '')
+            restored_item['category'] = restored_item.get('kategori', '')
+            restored_item['qty'] = int(restored_item.get('jumlah', 0))
+            restored_item['price'] = float(restored_item.get('harga', 0.0))
+            restored_item['expiry_date'] = restored_item.get('tanggal_kadaluarsa', '')
+            
+        return restored_item
+
     # ── Autosave ──────────────────────────────────────────────────────────────
     def autosave(self, filepath="inventory.csv"):
-        """Simpan semua item ke CSV setelah setiap perubahan."""
         fieldnames = ["kode_item", "nama_item", "kategori", "jumlah",
                       "harga", "satuan", "tanggal_kadaluarsa", "lokasi"]
         items = self.hash_map.all_values()

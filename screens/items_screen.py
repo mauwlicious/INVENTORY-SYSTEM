@@ -477,7 +477,7 @@ class ItemsScreen(ctk.CTkFrame):
     def _open_add_dialog(self):
         dlg = ctk.CTkToplevel(self)
         dlg.title("Add New Item")
-        dlg.geometry("440x580")
+        dlg.geometry("440x620")
         dlg.resizable(True, True)
         dlg.grab_set()
         dlg.grid_columnconfigure(0, weight=1)

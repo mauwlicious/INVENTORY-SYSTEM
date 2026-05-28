@@ -299,9 +299,18 @@ class PriorityScreen(ctk.CTkFrame):
     def pop_top(self):
         pq = self._get_pq()
         try:
+            # Mengeluarkan item teratas dari antrean saat ini
             item = pq.pop()
             if item:
-                self._show_toast(f"⬆ Popped: {item.get('code')} — {item.get('name')}")
+                # Mengambil kode barang untuk dihapus dari semua sistem
+                code = item.get("code", "")
+                
+                # Memerintahkan pengelola inventaris untuk menghapus permanen
+                self.inventory_manager.remove_item(code)
+                # Menyimpan perubahan agar hilang dari file CSV
+                self.inventory_manager.autosave()
+                
+                self._show_toast(f"⬆ Popped & Removed: {code} — {item.get('name')}")
                 self._current_page = 0
                 self._load_items()
                 self._render_page()
@@ -309,10 +318,19 @@ class PriorityScreen(ctk.CTkFrame):
             self._show_toast("Queue is empty!", error=True)
 
     def _pop_item(self, code):
-        pq = self._get_pq()
-        pq.remove_by_code(code)
-        self._show_toast(f"Removed {code}")
+        # Memerintahkan pengelola inventaris untuk menghapus barang secara keseluruhan
+        sukses = self.inventory_manager.remove_item(code)
+        
+        if sukses:
+            # Menyimpan perubahan agar hilang dari file CSV
+            self.inventory_manager.autosave()
+            self._show_toast(f"Permanently removed {code}")
+        else:
+            self._show_toast(f"Gagal menghapus {code}", error=True)
+            
         self._load_items()
+        
+        # Memastikan halaman tidak kosong jika data di halaman terakhir habis terhapus
         if self._current_page >= self._total_pages():
             self._current_page = max(0, self._total_pages() - 1)
         self._render_page()
