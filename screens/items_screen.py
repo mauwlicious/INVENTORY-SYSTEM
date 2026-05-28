@@ -1,6 +1,9 @@
 # screens/items_screen.py
 import customtkinter as ctk
 from datetime import datetime, date
+import csv
+import io
+from tkinter import filedialog
 
 PRIMARY    = "#1E61B8"
 TEXT_SEC   = "#7A8A9A"
@@ -131,7 +134,7 @@ class ItemsScreen(ctk.CTkFrame):
         self._current_page     = 0
         self._all_items        = []
 
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(4, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self._build_layout()
         self.on_show()
@@ -152,10 +155,24 @@ class ItemsScreen(ctk.CTkFrame):
                                         font=ctk.CTkFont(size=12), text_color=TEXT_SEC)
         self._count_lbl.pack(anchor="w")
 
-        ctk.CTkButton(hdr, text="+ Add Item", width=130, height=36,
+        # Kumpulan Tombol Header (Import, Export, Add)
+        right_btns = ctk.CTkFrame(hdr, fg_color="transparent")
+        right_btns.grid(row=0, column=2, sticky="e")
+        
+        ctk.CTkButton(right_btns, text="📥 Import CSV", width=100, height=36,
+                      fg_color="#E4EDF7", text_color=PRIMARY, hover_color="#C5D8FF",
+                      font=ctk.CTkFont(size=12, weight="bold"), corner_radius=8,
+                      command=self._open_import_dialog).pack(side="left", padx=(0, 8))
+                      
+        ctk.CTkButton(right_btns, text="📤 Export CSV", width=100, height=36,
+                      fg_color="#EAF7EC", text_color=GREEN, hover_color="#C5EDD0",
+                      font=ctk.CTkFont(size=12, weight="bold"), corner_radius=8,
+                      command=self._export_csv).pack(side="left", padx=(0, 8))
+
+        ctk.CTkButton(right_btns, text="+ Add Item", width=120, height=36,
                       fg_color=PRIMARY, hover_color="#1650A0",
                       font=ctk.CTkFont(size=13), corner_radius=8,
-                      command=self._open_add_dialog).grid(row=0, column=2)
+                      command=self._open_add_dialog).pack(side="left")
 
         # Controls & Search Bar
         frow = ctk.CTkFrame(self, fg_color="transparent")
@@ -183,28 +200,24 @@ class ItemsScreen(ctk.CTkFrame):
                           width=155, height=36, corner_radius=8,
                           command=self._on_category).pack(side="left")
 
-        # Container Utama untuk Tabel
         self._table_outer = ctk.CTkFrame(self, fg_color=_table_bg(), corner_radius=8)
-        self._table_outer.grid(row=2, column=0, sticky="nsew", padx=24, pady=(0, 4))
+        self._table_outer.grid(row=2, column=0, sticky="ew", padx=24, pady=(0, 4))
         self._table_outer.grid_columnconfigure(0, weight=1)
-        self._table_outer.grid_rowconfigure(1, weight=1) # Baris 1 disiapkan untuk konten data membesar
 
-        # Header dan Body diletakkan SAMA-SAMA di dalam _table_outer
         self._build_table_header()
 
-        self._table = ctk.CTkFrame(self._table_outer, fg_color="transparent")
-        self._table.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self._table = ctk.CTkFrame(self._table_outer, fg_color="transparent", height=430)
+        self._table.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 12))
         self._table.grid_columnconfigure(0, weight=1)
+        self._table.grid_propagate(False)
 
         self._build_pagination_bar()
 
     def _build_table_header(self):
-        # Header menggunakan row=0 dari _table_outer
         self._tbl_hdr = ctk.CTkFrame(self._table_outer, fg_color=PRIMARY, corner_radius=8, height=34)
         self._tbl_hdr.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 4))
         self._tbl_hdr.grid_propagate(False)
         
-        # Menerapkan uniform group
         for i, (col, w, align) in enumerate(zip(COL_HEADERS, COL_WIDTHS, COL_ALIGNS)):
             self._tbl_hdr.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
             
@@ -230,6 +243,117 @@ class ItemsScreen(ctk.CTkFrame):
                                         font=ctk.CTkFont(size=12), corner_radius=8,
                                         command=self._next_page)
         self._next_btn.grid(row=0, column=2, padx=(8, 0))
+
+    # ── IMPORT & EXPORT CSV ───────────────────────────────────────────────────
+    def _export_csv(self):
+        items = self.inventory_manager.hash_map.all_values()
+        if not items:
+            self._show_toast("Tidak ada data untuk diekspor!", error=True)
+            return
+            
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv")],
+            title="Simpan File CSV",
+            initialfile=f"inventory_export_{datetime.now().strftime('%Y%m%d')}.csv"
+        )
+        if not filepath: return
+        
+        try:
+            keys = ["code", "name", "category", "qty", "price", "expiry_date", "store"]
+            with open(filepath, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=keys)
+                writer.writeheader()
+                for item in items:
+                    row = {
+                        "code": item.get("code", item.get("kode_item", "")),
+                        "name": item.get("name", item.get("nama_item", "")),
+                        "category": item.get("category", item.get("kategori", "")),
+                        "qty": item.get("qty", item.get("jumlah", 0)),
+                        "price": item.get("price", item.get("harga", 0)),
+                        "expiry_date": item.get("expiry_date", item.get("tanggal_kadaluarsa", "")),
+                        "store": item.get("store", item.get("lokasi", "")),
+                    }
+                    writer.writerow(row)
+            self._show_toast(f"✅ Berhasil ekspor {len(items)} item ke CSV!")
+        except Exception as e:
+            self._show_toast(f"Gagal mengekspor file: {e}", error=True)
+
+    def _open_import_dialog(self):
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("Import Items dari CSV")
+        dlg.geometry("520x480")
+        dlg.resizable(False, False)
+        dlg.grab_set()
+        dlg.grid_columnconfigure(0, weight=1)
+        
+        ctk.CTkLabel(dlg, text="📥 Import Items (Copy Paste)", font=ctk.CTkFont(size=17, weight="bold")).grid(row=0, column=0, padx=24, pady=(20, 4), sticky="w")
+        
+        hint = ("Tempel (paste) tabel data CSV Anda di kotak bawah ini.\n"
+                "Pastikan baris pertama memuat kolom header berikut:\n"
+                "code, name, category, qty, price, expiry_date, store")
+        ctk.CTkLabel(dlg, text=hint, font=ctk.CTkFont(size=12), text_color=TEXT_SEC, justify="left").grid(row=1, column=0, padx=24, pady=(0, 10), sticky="w")
+        
+        textbox = ctk.CTkTextbox(dlg, width=472, height=260, corner_radius=8, font=ctk.CTkFont(family="Courier", size=12))
+        textbox.grid(row=2, column=0, padx=24, pady=(0, 10))
+        
+        btn_row = ctk.CTkFrame(dlg, fg_color="transparent")
+        btn_row.grid(row=3, column=0, padx=24, pady=(10, 20), sticky="e")
+        
+        def do_import():
+            content = textbox.get("1.0", "end-1c").strip()
+            if not content:
+                self._show_toast("Isi data CSV masih kosong!", error=True)
+                return
+            
+            success_count = 0
+            try:
+                reader = csv.DictReader(io.StringIO(content))
+                for row in reader:
+                    # Toleransi pembacaan dengan handle dictionary indonesia & inggris
+                    code = row.get("code", row.get("kode_item", "")).strip().upper()
+                    name = row.get("name", row.get("nama_item", "")).strip()
+                    if not code or not name: continue
+                    
+                    try: qty = int(row.get("qty", row.get("jumlah", 0)))
+                    except: qty = 0
+                    
+                    try: price = float(row.get("price", row.get("harga", 0)))
+                    except: price = 0
+                    
+                    cat = row.get("category", row.get("kategori", "Lainnya"))
+                    exp = row.get("expiry_date", row.get("tanggal_kadaluarsa", ""))
+                    store = row.get("store", row.get("lokasi", "—"))
+                    
+                    new_item = {
+                        "code": code, "kode_item": code,
+                        "name": name, "nama_item": name,
+                        "category": cat, "kategori": cat,
+                        "qty": qty, "jumlah": qty,
+                        "price": price, "harga": price,
+                        "expiry_date": exp, "tanggal_kadaluarsa": exp,
+                        "store": store, "lokasi": store,
+                        "satuan": row.get("satuan", "pcs"),
+                    }
+                    
+                    if self.inventory_manager.hash_map.contains(code):
+                        self.inventory_manager.update_item(code, new_item)
+                    else:
+                        self.inventory_manager.add_item(new_item)
+                    success_count += 1
+                    
+                if hasattr(self.inventory_manager, 'autosave'):
+                    self.inventory_manager.autosave()
+                    
+                dlg.destroy()
+                self._load_items()
+                self._render_page()
+                self._show_toast(f"✅ Berhasil import/update {success_count} item!")
+            except Exception as e:
+                self._show_toast(f"Format CSV tidak valid: {e}", error=True)
+
+        ctk.CTkButton(btn_row, text="Batal", width=90, height=34, fg_color="transparent", border_width=1, text_color=TEXT_PRI, corner_radius=8, command=dlg.destroy).pack(side="left", padx=(0, 8))
+        ctk.CTkButton(btn_row, text="Proses Data", width=120, height=34, fg_color=PRIMARY, hover_color="#1650A0", corner_radius=8, command=do_import).pack(side="left")
 
     # ── Debounce ──────────────────────────────────────────────────────────────
     def _schedule_search(self):
@@ -266,7 +390,6 @@ class ItemsScreen(ctk.CTkFrame):
         return max(1, -(-len(self._all_items) // ROWS_PER_PAGE))
 
     def _render_page(self):
-        # Karena Header ada di _table_outer, kita aman menghancurkan semua isi _table tanpa menghapus header!
         for w in self._table.winfo_children():
             w.destroy()
             
@@ -293,47 +416,32 @@ class ItemsScreen(ctk.CTkFrame):
         row_frame = ctk.CTkFrame(self._table, fg_color=bg, corner_radius=6)
         row_frame.grid(row=row_idx, column=0, sticky="ew", pady=2)
         
-        # Menerapkan uniform group yang sama persis dengan header
         for i, w in enumerate(COL_WIDTHS):
             row_frame.grid_columnconfigure(i, minsize=w, weight=w, uniform="table_col")
 
-        # Col 0: CODE
         ctk.CTkLabel(row_frame, text=item.get("code", ""), font=ctk.CTkFont(size=11, weight="bold"),
                      text_color=PRIMARY, anchor=COL_ALIGNS[0]).grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
-        
-        # Col 1: NAME
         ctk.CTkLabel(row_frame, text=item.get("name", ""), font=ctk.CTkFont(size=11), 
                      anchor=COL_ALIGNS[1]).grid(row=0, column=1, sticky="nsew", padx=6, pady=6)
-                     
-        # Col 2: CATEGORY
         ctk.CTkLabel(row_frame, text=item.get("category", ""), font=ctk.CTkFont(size=11), text_color=TEXT_SEC, 
                      anchor=COL_ALIGNS[2]).grid(row=0, column=2, sticky="nsew", padx=6, pady=6)
-                     
-        # Col 3: QTY
         ctk.CTkLabel(row_frame, text=str(item.get("qty", 0)), font=ctk.CTkFont(size=11), 
                      anchor=COL_ALIGNS[3]).grid(row=0, column=3, sticky="nsew", padx=6, pady=6)
-                     
-        # Col 4: PRICE
         ctk.CTkLabel(row_frame, text=price_fmt, font=ctk.CTkFont(size=11), 
                      anchor=COL_ALIGNS[4]).grid(row=0, column=4, sticky="nsew", padx=6, pady=6)
-                     
-        # Col 5: EXPIRY
         ctk.CTkLabel(row_frame, text=exp_badge, font=ctk.CTkFont(size=11), text_color=exp_col, 
                      anchor=COL_ALIGNS[5]).grid(row=0, column=5, sticky="nsew", padx=6, pady=6)
 
-        # Col 6: ACTION buttons
         code = item.get("code", "")
         btn_f = ctk.CTkFrame(row_frame, fg_color="transparent")
-        btn_f.grid(row=0, column=6, sticky="", padx=4, pady=4) # sticky="" agar container button rata tengah di selnya
+        btn_f.grid(row=0, column=6, sticky="", padx=4, pady=4)
 
         ctk.CTkButton(btn_f, text="✏", width=36, height=26, fg_color="#E8F0FE", text_color=PRIMARY,
                       hover_color="#C5D8FF", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda i=item: self._open_edit_dialog(dict(i))).pack(side="left", padx=2)
-                      
         ctk.CTkButton(btn_f, text="📋", width=36, height=26, fg_color="#EAF7EC", text_color=GREEN,
                       hover_color="#C5EDD0", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda i=item: self._open_details_dialog(dict(i))).pack(side="left", padx=2)
-                      
         ctk.CTkButton(btn_f, text="🗑", width=36, height=26, fg_color="#FFECEC", text_color=RED,
                       hover_color="#FFD5D5", corner_radius=6, font=ctk.CTkFont(size=13),
                       command=lambda c=code: self._confirm_delete(c)).pack(side="left", padx=2)

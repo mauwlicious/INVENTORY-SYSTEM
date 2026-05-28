@@ -1,0 +1,156 @@
+kode_item,nama_item,kategori,jumlah,harga,satuan,tanggal_kadaluarsa,lokasi
+CLT-0042,Sepatu Safety Pro,Clothing,97,7962500.0,liter,,Gudang B
+CLT-0043,Sarung Tangan,Clothing,156,14366500.0,box,,Toko Utama
+STN-0144,Binder Clip 50pcs Seri-144,Stationary,60,4533000.0,pcs,,Gudang B
+CLT-0044,Masker N95,Clothing,163,1561000.0,box,,Gudang B
+CLT-0045,Jas Lab,Clothing,147,902500.0,box,,Rak C1
+CLT-0046,Topi Proyek,Clothing,73,1553500.0,kg,,Gudang A
+CLT-0047,Topi Proyek Pro,Clothing,84,3072500.0,pcs,,Toko Utama
+CLT-0048,Kacamata Safety,Clothing,124,9762500.0,kg,,Rak D2
+CLN-0142,Lap Pel Set Seri-142,Cleaning,195,5135500.0,box,2026-08-25,Toko Utama
+CLN-0143,Sapu Lidi Seri-143,Cleaning,20,8632500.0,box,2027-04-01,Gudang B
+FNB-0050,Teh Celup 100pcs,Food & Beverage,102,2653000.0,pcs,2027-05-27,Gudang A
+FRN-0135,Rak Buku Seri-135,Furniture,162,3159500.0,unit,,Toko Utama
+CLN-0149,Sikat WC Seri-149,Cleaning,81,11280500.0,lusin,2028-05-16,Toko Utama
+TLS-0150,Obeng Set Seri-150,Tools,97,12564000.0,box,,Toko Utama
+FNB-0051,Teh Celup 100pcs Pro,Food & Beverage,98,9787500.0,pcs,2026-11-24,Toko Utama
+FNB-0052,Gula Pasir 5kg,Food & Beverage,104,14456500.0,unit,2027-01-18,Gudang B
+FNB-0053,Air Mineral 24pcs,Food & Beverage,123,7892500.0,liter,2027-09-01,Toko Utama
+FNB-0054,Susu UHT 1L,Food & Beverage,116,12392000.0,box,2027-04-10,Rak C1
+FNB-0055,Mie Instan 40pcs,Food & Beverage,56,296000.0,box,2027-06-25,Toko Utama
+FNB-0056,Mie Instan 40pcs Pro,Food & Beverage,165,5272500.0,pcs,2026-05-07,Gudang A
+FNB-0057,Biskuit Kaleng,Food & Beverage,150,6979000.0,kg,2027-07-23,Gudang B
+FNB-0058,Sirup Marjan,Food & Beverage,129,14937000.0,box,2027-02-08,Rak C1
+FNB-0059,Kopi Sachet 50pcs,Food & Beverage,112,1981000.0,kg,2027-05-04,Rak D2
+CLN-0151,Tempat Sampah Seri-151,Cleaning,104,8329000.0,box,2027-09-26,Toko Utama
+CLN-0152,Sabun Lantai 5L Seri-152,Cleaning,27,9909000.0,pcs,2027-05-21,Gudang A
+CLN-0153,Ember Plastik Seri-153,Cleaning,164,10487000.0,pcs,2026-12-20,Gudang B
+FRN-0141,Kursi Kantor Seri-141,Furniture,21,9931500.0,box,,Gudang B
+FRN-0021,Kursi Kantor,Furniture,137,9106500.0,pcs,,Toko Utama
+FRN-0022,Kursi Kantor Pro,Furniture,102,4956000.0,unit,,Toko Utama
+FRN-0023,Meja Kerja,Furniture,136,12720500.0,unit,,Rak C1
+FRN-0024,Lemari Arsip,Furniture,76,12022500.0,kg,,Toko Utama
+FNB-0060,Teh Botol 24pcs,Food & Beverage,121,8887000.0,kg,2026-05-15,Gudang B
+FRN-0025,Lemari Arsip Pro,Furniture,159,14882000.0,box,,Rak D2
+FNB-0061,Teh Botol 24pcs Pro,Food & Beverage,106,2479000.0,box,2028-02-18,Gudang A
+FRN-0026,Rak Buku,Furniture,49,3321500.0,unit,,Toko Utama
+FRN-0027,Sofa Tunggu,Furniture,153,4349500.0,lusin,,Gudang B
+FRN-0028,Meja Meeting,Furniture,9,4437500.0,kg,,Rak C1
+FRN-0029,Meja Meeting Pro,Furniture,142,1794500.0,unit,,Gudang A
+FRN-0030,Kursi Gaming,Furniture,125,13159000.0,unit,,Toko Utama
+FRN-0031,Filing Cabinet,Furniture,137,14403000.0,box,,Rak D2
+FRN-0032,Filing Cabinet Pro,Furniture,98,8366500.0,lusin,,Rak C1
+FRN-0033,Loker Karyawan,Furniture,109,13873500.0,kg,,Gudang B
+FRN-0154,Rak Buku Seri-154,Furniture,134,11908000.0,box,,Toko Utama
+FRN-0034,Loker Karyawan Pro,Furniture,198,14182000.0,lusin,,Gudang B
+FRN-0035,Whiteboard,Furniture,172,4643500.0,box,,Gudang B
+FRN-0036,Whiteboard Pro,Furniture,105,8691500.0,unit,,Rak C1
+TLS-0062,Obeng Set,Tools,188,11669000.0,lusin,,Gudang B
+TLS-0063,Obeng Set Pro,Tools,23,9458500.0,kg,,Toko Utama
+TLS-0064,Tang Kombinasi,Tools,196,10243500.0,lusin,,Rak C1
+TLS-0065,Tang Kombinasi Pro,Tools,81,6180500.0,lusin,,Rak C1
+TLS-0066,Kunci Inggris,Tools,88,8567000.0,box,,Gudang A
+TLS-0067,Bor Listrik,Tools,75,6667000.0,box,,Rak D2
+TLS-0068,Gergaji Besi,Tools,107,2009000.0,kg,,Gudang A
+TLS-0069,Meteran 5m,Tools,191,5222000.0,kg,,Toko Utama
+TLS-0070,Waterpass,Tools,139,3932500.0,kg,,Rak C1
+TLS-0071,Waterpass Pro,Tools,127,5871000.0,liter,,Gudang B
+TLS-0072,Palu Besi,Tools,112,7952000.0,box,,Toko Utama
+TLS-0073,Cutter Besar,Tools,160,3408500.0,lusin,,Rak C1
+TLS-0074,Cutter Besar Pro,Tools,3,5967500.0,unit,,Toko Utama
+TLS-0075,Selotip Double Tape,Tools,193,6476500.0,liter,,Gudang A
+TLS-0076,Selotip Double Tape Pro,Tools,155,3879000.0,lusin,,Gudang A
+STN-0077,Kertas HVS A4,Stationary,10,1759500.0,box,,Rak C1
+STN-0078,Pulpen Ballpoint,Stationary,85,12656000.0,lusin,,Toko Utama
+STN-0079,Spidol Whiteboard,Stationary,32,14382000.0,lusin,,Toko Utama
+ELC-0001,Laptop ASUS,Electronics,72,5591000.0,pcs,,Rak C1
+ELC-0002,Laptop Lenovo,Electronics,170,12805000.0,unit,,Rak D2
+ELC-0003,Monitor LG,Electronics,17,7247500.0,pcs,,Toko Utama
+ELC-0004,Monitor Samsung,Electronics,5,6041000.0,pcs,,Toko Utama
+ELC-0005,Monitor Samsung Pro,Electronics,62,4055000.0,lusin,,Gudang A
+ELC-0006,Keyboard Mechanical,Electronics,53,9666000.0,liter,,Gudang A
+ELC-0007,Mouse Wireless,Electronics,66,3139000.0,lusin,,Rak D2
+STN-0080,Spidol Whiteboard Pro,Stationary,159,571000.0,box,,Gudang A
+ELC-0008,Headset Gaming,Electronics,127,7592000.0,liter,,Rak D2
+STN-0081,Stapler Besar,Stationary,59,6202000.0,pcs,,Rak C1
+ELC-0009,Speaker Bluetooth,Electronics,162,11705000.0,liter,,Rak D2
+STN-0082,Stapler Besar Pro,Stationary,62,3067000.0,liter,,Rak C1
+STN-0083,Penggaris 30cm,Stationary,71,5150000.0,box,,Toko Utama
+STN-0084,Amplop Coklat,Stationary,188,6811000.0,unit,,Gudang A
+STN-0085,Map Plastik,Stationary,2,14903500.0,pcs,,Toko Utama
+STN-0086,Tinta Printer,Stationary,109,5643500.0,lusin,,Gudang B
+STN-0087,Penghapus,Stationary,184,6595500.0,kg,,Rak C1
+STN-0088,Penghapus Pro,Stationary,60,2569000.0,box,,Rak D2
+STN-0089,Binder Clip 50pcs,Stationary,144,5703500.0,box,,Gudang A
+ELC-0010,Webcam HD,Electronics,200,5140500.0,pcs,,Rak D2
+ELC-0011,Webcam HD Pro,Electronics,135,13832500.0,lusin,,Gudang B
+ELC-0012,Printer Canon,Electronics,137,7976500.0,box,,Gudang A
+ELC-0013,Printer Epson,Electronics,95,10524500.0,unit,,Rak C1
+ELC-0014,SSD Samsung 1TB,Electronics,142,8281500.0,kg,,Rak C1
+ELC-0015,RAM DDR4 16GB,Electronics,99,2346500.0,pcs,,Toko Utama
+ELC-0016,RAM DDR4 16GB Pro,Electronics,173,11522000.0,pcs,,Rak C1
+ELC-0017,USB Hub 7-Port,Electronics,9,7159500.0,pcs,,Rak D2
+ELC-0018,USB Hub 7-Port Pro,Electronics,5,7988000.0,unit,,Gudang A
+ELC-0019,HDMI Cable,Electronics,154,903000.0,box,,Rak C1
+CLN-0090,Sabun Lantai 5L,Cleaning,86,11245500.0,pcs,2026-10-30,Gudang A
+CLN-0091,Sabun Lantai 5L Pro,Cleaning,126,14158000.0,pcs,2027-04-11,Rak C1
+CLN-0092,Cairan Pembersih,Cleaning,179,6371000.0,unit,2026-09-24,Rak D2
+CLN-0093,Cairan Pembersih Pro,Cleaning,14,10798500.0,unit,2027-06-02,Toko Utama
+CLN-0094,Kain Lap Microfiber,Cleaning,110,9416500.0,box,2027-07-09,Rak C1
+CLN-0095,Kain Lap Microfiber Pro,Cleaning,13,937000.0,box,2027-12-06,Toko Utama
+CLN-0096,Sapu Lidi,Cleaning,160,4732500.0,pcs,2027-10-21,Gudang B
+CLN-0097,Sapu Lidi Pro,Cleaning,28,9381000.0,pcs,2028-01-10,Rak C1
+CLN-0098,Kemoceng,Cleaning,111,6190500.0,pcs,2026-12-13,Rak D2
+CLN-0099,Ember Plastik,Cleaning,112,10034500.0,kg,2026-10-13,Gudang A
+ELC-0140,Laptop ASUS Seri-140,Electronics,49,330000.0,pcs,,Gudang A
+ELC-0020,HDMI Cable Pro,Electronics,121,7207500.0,kg,,Gudang A
+ELC-0146,HDMI Cable Seri-146,Electronics,25,13706500.0,box,,Toko Utama
+ELC-0155,Laptop ASUS Seri-155,Electronics,132,5188500.0,lusin,,Gudang A
+MED-0108,Obat P3K Set,Medical,191,2227000.0,kg,2028-04-02,Rak C1
+MED-0109,Obat P3K Set Pro,Medical,145,11921500.0,kg,2028-04-05,Gudang A
+MED-0110,Perban Gulung,Medical,60,10007500.0,unit,2027-02-07,Toko Utama
+MED-0111,Perban Gulung Pro,Medical,85,7998500.0,lusin,2027-08-05,Toko Utama
+MED-0112,Plester Luka,Medical,76,2692500.0,lusin,2027-12-16,Gudang A
+MED-0113,Plester Luka Pro,Medical,9,10370000.0,lusin,2027-01-28,Rak C1
+MED-0114,Alkohol 70%,Medical,193,2778000.0,kg,2026-08-14,Rak C1
+MED-0115,Alkohol 70% Pro,Medical,183,1135000.0,pcs,2027-02-24,Gudang B
+MED-0116,Betadine 30ml,Medical,15,9815500.0,unit,2028-01-23,Toko Utama
+MED-0117,Betadine 30ml Pro,Medical,186,5200000.0,lusin,2028-03-11,Rak D2
+MED-0118,Sarung Tangan Latex,Medical,197,13262500.0,unit,2027-05-30,Toko Utama
+MED-0119,Sarung Tangan Latex Pro,Medical,184,8405500.0,liter,2027-07-05,Rak D2
+MED-0120,Masker Bedah 50pcs,Medical,26,3548000.0,lusin,2026-10-26,Rak D2
+MED-0121,Masker Bedah 50pcs Pro,Medical,106,12216500.0,pcs,2027-01-25,Rak C1
+MED-0122,Termometer Digital,Medical,165,14069000.0,unit,2027-07-05,Gudang B
+MED-0123,Tensimeter Digital,Medical,116,3022000.0,unit,2027-09-23,Gudang A
+MED-0124,Kapas Gulung,Medical,119,3217500.0,pcs,2027-06-18,Toko Utama
+CLT-0125,Seragam Security Seri-125,Clothing,179,8256500.0,lusin,,Gudang B
+MED-0127,Tensimeter Digital Seri-127,Medical,161,5645500.0,box,2027-08-16,Toko Utama
+MED-0128,Plester Luka Seri-128,Medical,128,5853500.0,lusin,2026-08-04,Gudang B
+CLN-0100,Ember Plastik Pro,Cleaning,75,9145000.0,box,2027-09-10,Toko Utama
+CLN-0101,Sikat WC,Cleaning,136,3986000.0,box,2028-03-31,Rak C1
+CLN-0102,Sikat WC Pro,Cleaning,45,1063500.0,unit,2028-03-16,Gudang A
+CLN-0103,Pewangi Ruangan,Cleaning,122,3731500.0,pcs,2027-05-04,Gudang A
+CLN-0104,Tempat Sampah,Cleaning,48,1845500.0,lusin,2027-01-27,Rak C1
+CLN-0105,Tempat Sampah Pro,Cleaning,93,9061500.0,unit,2027-06-10,Rak C1
+CLN-0106,Lap Pel Set,Cleaning,19,5197500.0,liter,2027-08-23,Gudang B
+CLN-0107,Lap Pel Set Pro,Cleaning,171,7632500.0,liter,2027-06-11,Rak D2
+FNB-0131,Air Mineral 24pcs Seri-131,Food & Beverage,63,906000.0,unit,2026-06-14,Gudang A
+FNB-0132,Gula Pasir 5kg Seri-132,Food & Beverage,112,13342000.0,lusin,2026-12-22,Gudang A
+FNB-0137,Susu UHT 1L Seri-137,Food & Beverage,146,12228000.0,unit,2027-02-14,Toko Utama
+FNB-0138,Teh Botol 24pcs Seri-138,Food & Beverage,140,2690500.0,pcs,2028-04-21,Toko Utama
+CLT-0136,Topi Proyek Seri-136,Clothing,76,9211000.0,unit,,Gudang A
+CLT-0145,Rompi Safety Seri-145,Clothing,15,9664500.0,box,,Gudang A
+STN-0126,Spidol Whiteboard Seri-126,Stationary,197,20000.0,box,,Gudang A
+CLT-0147,Rompi Safety Seri-147,Clothing,111,13449500.0,pcs,,Gudang B
+MED-0148,Termometer Digital Seri-148,Medical,121,9463000.0,pcs,2027-09-21,Toko Utama
+STN-0129,Kertas HVS A4 Seri-129,Stationary,132,2734500.0,lusin,,Toko Utama
+TLS-0130,Cutter Besar Seri-130,Tools,151,3139000.0,pcs,,Toko Utama
+TLS-0134,Bor Listrik Seri-134,Tools,193,5484500.0,pcs,,Gudang A
+STN-0133,Spidol Whiteboard Seri-133,Stationary,11,14332500.0,lusin,,Gudang A
+CLT-0037,Seragam Staff,Clothing,131,14749000.0,liter,,Rak C1
+CLT-0038,Seragam Security,Clothing,111,2578000.0,liter,,Rak D2
+CLT-0039,Rompi Safety,Clothing,2,11676500.0,liter,,Gudang B
+CLN-0139,Ember Plastik Seri-139,Cleaning,177,11835500.0,box,2027-10-03,Gudang B
+FNB-0049,Kopi Arabika 1kg,Food & Beverage,129,7326500.0,pcs,2026-10-19,Gudang A
+CLT-0040,Helm Safety,Clothing,196,2115500.0,lusin,,Rak D2
+CLT-0041,Sepatu Safety,Clothing,74,6271500.0,unit,,Rak D2

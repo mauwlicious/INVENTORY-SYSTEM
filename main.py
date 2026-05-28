@@ -1,6 +1,7 @@
 # main.py — Entry point PT ABC Inventory System
 import os, json
 import customtkinter as ctk
+import tkinter.messagebox as messagebox
 from inventory_manager import InventoryManager
 from sales_manager      import SalesManager
 from screens.login_screen import LoginScreen
@@ -32,9 +33,15 @@ def load_env():
                         elif k == "USER_PASSWORD" and current_email:
                             USERS_DB[current_email] = v
             break
+            
     if not USERS_DB:
-        print("[WARN] Tidak ada user di _env.txt — gunakan fallback")
-        USERS_DB["admin@mail.com"] = "rahasia123"
+        root_temp = ctk.CTk()
+        root_temp.withdraw()
+        messagebox.showwarning(
+            "Peringatan Sistem", 
+            "Tidak ada pengguna yang terdaftar di dalam sistem.\nSilahkan hubungi operator untuk menambahkan akses pengguna."
+        )
+        exit()
 
 
 def load_remember_me():

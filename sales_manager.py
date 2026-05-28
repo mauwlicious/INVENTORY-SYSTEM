@@ -6,7 +6,6 @@ SALES_FILE = "sales.csv"
 FIELDNAMES = ["sale_id","date","time","item_code","item_name",
               "category","qty_sold","unit_price","subtotal","cashier"]
 
-
 def _load_sales() -> list:
     rows = []
     if not os.path.exists(SALES_FILE):
@@ -22,7 +21,6 @@ def _load_sales() -> list:
         print(f"[WARN] Gagal baca sales: {e}")
     return rows
 
-
 def _save_sales(rows: list):
     try:
         with open(SALES_FILE, "w", newline="", encoding="utf-8") as f:
@@ -31,7 +29,6 @@ def _save_sales(rows: list):
             writer.writerows(rows)
     except Exception as e:
         print(f"[WARN] Gagal simpan sales: {e}")
-
 
 def _next_id(rows: list) -> str:
     if not rows:
@@ -43,27 +40,24 @@ def _next_id(rows: list) -> str:
         n = len(rows) + 1
     return f"TRX-{n:04d}"
 
-
 class SalesManager:
     """Mengelola riwayat penjualan dengan list of dict (disimpan ke CSV)."""
 
     def __init__(self):
         self._sales = _load_sales()
 
-    # ── CRUD ──────────────────────────────────────────────────────────────────
-
     def record_sale(self, item: dict, qty_sold: int, cashier: str = "Admin") -> dict:
         """Catat penjualan. Mengembalikan dict transaksi baru."""
         now       = datetime.now()
-        unit_price = item.get("price", 0)
+        unit_price = item.get("price", item.get("harga", 0))
         subtotal   = unit_price * qty_sold
         record = {
             "sale_id":    _next_id(self._sales),
             "date":       now.strftime("%Y-%m-%d"),
             "time":       now.strftime("%H:%M:%S"),
-            "item_code":  item.get("code", ""),
-            "item_name":  item.get("name", ""),
-            "category":   item.get("category", ""),
+            "item_code":  item.get("code", item.get("kode_item", "")),
+            "item_name":  item.get("name", item.get("nama_item", "")),
+            "category":   item.get("category", item.get("kategori", "")),
             "qty_sold":   qty_sold,
             "unit_price": unit_price,
             "subtotal":   subtotal,
@@ -72,6 +66,15 @@ class SalesManager:
         self._sales.append(record)
         _save_sales(self._sales)
         return record
+
+    def delete_sale(self, sale_id: str) -> dict:
+        """Menghapus transaksi berdasarkan ID dan mengembalikan data yang dihapus."""
+        for i, s in enumerate(self._sales):
+            if s.get("sale_id") == sale_id:
+                record = self._sales.pop(i)
+                _save_sales(self._sales)
+                return record
+        return None
 
     def get_all(self) -> list:
         return list(self._sales)
@@ -82,15 +85,13 @@ class SalesManager:
         total_revenue  = sum(s["subtotal"] for s in self._sales)
         total_qty_sold = sum(s["qty_sold"]  for s in self._sales)
 
-        # Item paling banyak terjual (menggunakan dict untuk menghitung)
         item_count: dict = {}
         for s in self._sales:
-            k = s["item_code"]
+            k = s["item_name"]
             item_count[k] = item_count.get(k, 0) + s["qty_sold"]
         top_item = max(item_count, key=item_count.get) if item_count else "—"
         top_item_qty = item_count.get(top_item, 0)
 
-        # Revenue per kategori
         cat_rev: dict = {}
         for s in self._sales:
             cat = s.get("category","Lainnya")
