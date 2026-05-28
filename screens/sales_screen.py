@@ -7,7 +7,6 @@ RED      = "#D92626"; GREEN    = "#1A9A4A"; ORANGE   = "#D97800"
 
 ROWS_PER_PAGE = 15
 
-# Konfigurasi proporsi & posisi tabel riwayat sesuai referensi items_screen
 HIST_HEADERS = ["TRX ID", "TANGGAL", "WAKTU", "NAMA BARANG", "QTY", "TOTAL TRANSAKSI", "AKSI"]
 HIST_WIDTHS  = [100, 100, 75, 180, 55, 130, 90]
 HIST_ALIGNS  = ["center", "center", "center", "w", "center", "e", "center"]
@@ -73,7 +72,6 @@ class SalesScreen(ctk.CTkFrame):
 
         left = ctk.CTkFrame(page, fg_color="transparent")
         left.grid(row=0, column=0, sticky="nsew", padx=(24,8), pady=0)
-        # Menambahkan baris kosong penyerap ruang di bawah pagination
         left.grid_rowconfigure(4, weight=1)
         left.grid_columnconfigure(0, weight=1)
 
@@ -81,7 +79,6 @@ class SalesScreen(ctk.CTkFrame):
                      font=ctk.CTkFont(size=15, weight="bold")).grid(
             row=0, column=0, sticky="w", pady=(0,8))
 
-        # Kontainer baru untuk membungkus pencarian dan opsi pengurutan
         ctrl_frame = ctk.CTkFrame(left, fg_color="transparent")
         ctrl_frame.grid(row=1, column=0, sticky="ew", pady=(0,8))
         ctrl_frame.grid_columnconfigure(0, weight=1)
@@ -96,13 +93,11 @@ class SalesScreen(ctk.CTkFrame):
         self._pos_search.grid(row=0, column=1, sticky="ew", padx=(0,12))
         self._pos_search.bind("<KeyRelease>", lambda e: self._pos_search_items())
 
-        # Opsi pengurutan data
         sort_opts = ["Default", "Name A→Z", "Name Z→A", "Price Low→High", "Price High→Low"]
         self._pos_sort_var = ctk.StringVar(value="Default")
         sort_menu = ctk.CTkOptionMenu(ctrl_frame, variable=self._pos_sort_var, values=sort_opts, width=130, height=36, corner_radius=8, command=lambda v: self._pos_search_items())
         sort_menu.grid(row=0, column=1)
 
-        # Kunci tinggi scrollable table agar tidak merosot ke bawah
         self._pos_list = ctk.CTkScrollableFrame(left, corner_radius=8, height=500)
         self._pos_list.grid(row=2, column=0, sticky="ew")
         self._pos_list.grid_columnconfigure(0, weight=1)
@@ -120,7 +115,7 @@ class SalesScreen(ctk.CTkFrame):
 
         right = ctk.CTkFrame(page, fg_color="transparent")
         right.grid(row=0, column=1, sticky="nsew", padx=(8,24), pady=0)
-        right.grid_rowconfigure(1, weight=1) # Keranjang tetap butuh flexibel memuai
+        right.grid_rowconfigure(1, weight=1)
         right.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(right, text="🛒 Keranjang",
@@ -162,13 +157,11 @@ class SalesScreen(ctk.CTkFrame):
         query = self._pos_search.get().strip().upper()
         all_items = self.inventory_manager.hash_map.all_values()
         
-        # Proses penyaringan berdasarkan pencarian teks
         if query:
             filtered = [i for i in all_items if (query in i.get("code", i.get("kode_item", "")).upper() or query in i.get("name", i.get("nama_item", "")).upper())]
         else:
             filtered = all_items
             
-        # Proses pengurutan berdasarkan pilihan pada menu
         sort_key = self._pos_sort_var.get() if hasattr(self, "_pos_sort_var") else "Default"
         from data_structures import InventorySorter
         
@@ -252,8 +245,11 @@ class SalesScreen(ctk.CTkFrame):
         self._render_cart()
 
     def _render_cart(self):
+        self.focus_set()
+        
         for w in self._cart_frame.winfo_children():
             w.destroy()
+            
         if not self._cart:
             ctk.CTkLabel(self._cart_frame, text="Keranjang kosong", font=ctk.CTkFont(size=13), text_color=TEXT_SEC).pack(pady=30)
             self._total_lbl.configure(text="Total: Rp 0")
@@ -313,7 +309,9 @@ class SalesScreen(ctk.CTkFrame):
         if not target_entry: return
             
         try: new_qty = int(entry_val)
-        except ValueError: self._render_cart(); return
+        except ValueError: 
+            self.after(10, self._render_cart)
+            return
             
         if new_qty == target_entry["qty"]: return
             
@@ -327,7 +325,7 @@ class SalesScreen(ctk.CTkFrame):
             target_entry["subtotal"] = target_entry["max_qty"] * target_entry["price"]
             self._toast(f"Stok tidak mencukupi! Maksimal {target_entry['max_qty']}", error=True)
             
-        self._render_cart()
+        self.after(10, self._render_cart)
 
     def _remove_from_cart(self, code):
         self._cart = [e for e in self._cart if e["code"] != code]
@@ -371,10 +369,17 @@ class SalesScreen(ctk.CTkFrame):
                     self.sales_manager.record_sale(item, entry["qty"])
                     current_qty = item.get("qty", item.get("jumlah", 0))
                     new_qty = max(0, current_qty - entry["qty"])
-                    updated = dict(item)
-                    updated["qty"] = new_qty
-                    updated["jumlah"] = new_qty
-                    self.inventory_manager.update_item(entry["code"], updated)
+                    
+                    if new_qty == 0:
+                        item["qty"] = 0
+                        item["jumlah"] = 0
+                        self.inventory_manager.move_to_soldout(item)
+                        self.inventory_manager.remove_item(entry["code"])
+                    else:
+                        updated = dict(item)
+                        updated["qty"] = new_qty
+                        updated["jumlah"] = new_qty
+                        self.inventory_manager.update_item(entry["code"], updated)
             
             if hasattr(self.inventory_manager, 'autosave'):
                 self.inventory_manager.autosave()
@@ -391,8 +396,7 @@ class SalesScreen(ctk.CTkFrame):
     def _build_history_page(self):
         page = ctk.CTkFrame(self._content, fg_color="transparent")
         page.grid(row=0, column=0, sticky="nsew")
-        # Menambahkan baris kosong penyerap sisa layar di baris bawah
-        page.grid_rowconfigure(2, weight=1)
+        page.grid_rowconfigure(3, weight=1) # Berubah jadi row=3 karena ditambah fitur kontrol di bawah ringkasan
         page.grid_columnconfigure(0, weight=1)
         self._pages["history"] = page
 
@@ -400,8 +404,29 @@ class SalesScreen(ctk.CTkFrame):
         self._summary_frame.grid(row=0, column=0, sticky="ew", padx=24, pady=(8,8))
         for i in range(4): self._summary_frame.grid_columnconfigure(i, weight=1)
 
+        # BAGIAN BARU: Modul Pencarian & Pengurutan di Riwayat Transaksi
+        ctrl_frame = ctk.CTkFrame(page, fg_color="transparent")
+        ctrl_frame.grid(row=1, column=0, sticky="ew", padx=24, pady=(0,8))
+        ctrl_frame.grid_columnconfigure(0, weight=1)
+
+        sf = ctk.CTkFrame(ctrl_frame, corner_radius=10, height=36)
+        sf.grid(row=0, column=0, sticky="ew", padx=(0, 8))
+        sf.grid_propagate(False)
+        sf.grid_columnconfigure(1, weight=1)
+        
+        ctk.CTkLabel(sf, text="🔍", font=ctk.CTkFont(size=16), text_color=PRIMARY).grid(row=0, column=0, padx=(12,4), pady=4)
+        self._hist_search = ctk.CTkEntry(sf, height=36, fg_color="transparent", border_width=0, placeholder_text="Cari ID Transaksi atau Nama Barang...", font=ctk.CTkFont(size=13), corner_radius=0)
+        self._hist_search.grid(row=0, column=1, sticky="ew", padx=(0,12))
+        self._hist_search.bind("<KeyRelease>", lambda e: self._hist_search_items())
+
+        sort_opts = ["Terbaru (Newest)", "Terlama (Oldest)"]
+        self._hist_sort_var = ctk.StringVar(value="Terbaru (Newest)")
+        sort_menu = ctk.CTkOptionMenu(ctrl_frame, variable=self._hist_sort_var, values=sort_opts, width=150, height=36, corner_radius=8, command=lambda v: self._hist_search_items())
+        sort_menu.grid(row=0, column=1)
+
+        # TABEL RIWAYAT
         tbl_wrap = ctk.CTkFrame(page, fg_color="transparent")
-        tbl_wrap.grid(row=1, column=0, sticky="ew", padx=24, pady=(0,4))
+        tbl_wrap.grid(row=2, column=0, sticky="ew", padx=24, pady=(0,4))
         tbl_wrap.grid_columnconfigure(0, weight=1)
 
         hdr = ctk.CTkFrame(tbl_wrap, fg_color=PRIMARY, corner_radius=8, height=36)
@@ -429,6 +454,29 @@ class SalesScreen(ctk.CTkFrame):
         self._hist_next_btn = ctk.CTkButton(self._hist_pag_frame, text=">", width=35, command=lambda: self._change_hist_page(1))
         self._hist_next_btn.grid(row=0, column=2, sticky="w", padx=10)
 
+    # FUNGSI BARU: Mencari dan Mengurutkan Data Transaksi
+    def _hist_search_items(self):
+        query = self._hist_search.get().strip().upper()
+        # Ambil seluruh riwayat transaksi (tersimpan urut dari yang terlama)
+        all_sales = self.sales_manager.get_all()
+        
+        # Proses pencarian
+        if query:
+            filtered = [s for s in all_sales if (query in s.get("sale_id", "").upper() or query in s.get("item_name", "").upper() or query in s.get("date", ""))]
+        else:
+            filtered = all_sales
+            
+        # Proses pengurutan
+        sort_key = self._hist_sort_var.get() if hasattr(self, "_hist_sort_var") else "Terbaru (Newest)"
+        if sort_key == "Terbaru (Newest)":
+            filtered = list(reversed(filtered))  # Membalikkan urutan agar yang terbaru berada di atas
+        else:
+            filtered = list(filtered)
+            
+        self._hist_results = filtered
+        self._hist_page = 0
+        self._render_hist_page()
+
     def _load_history(self):
         for w in self._summary_frame.winfo_children(): w.destroy()
         s = self.sales_manager.get_summary()
@@ -447,9 +495,8 @@ class SalesScreen(ctk.CTkFrame):
             ctk.CTkLabel(c, text=val, font=ctk.CTkFont(size=15, weight="bold"), text_color=col, anchor="w").grid(row=0, column=1, sticky="sw", padx=(0,10))
             ctk.CTkLabel(c, text=label, font=ctk.CTkFont(size=10), text_color=TEXT_SEC, anchor="w").grid(row=1, column=1, sticky="nw", padx=(0,10))
 
-        self._hist_results = self.sales_manager.get_recent(1000)
-        self._hist_page = 0
-        self._render_hist_page()
+        # Panggil fungsi pencarian & pengurutan setiap kali tab riwayat dimuat
+        self._hist_search_items()
         
     def _render_hist_page(self):
         for w in self._hist_body.winfo_children(): w.destroy()
@@ -460,7 +507,7 @@ class SalesScreen(ctk.CTkFrame):
         self._hist_next_btn.configure(state="normal" if self._hist_page < total_pages - 1 else "disabled")
 
         if not self._hist_results:
-            ctk.CTkLabel(self._hist_body, text="Belum ada transaksi.", font=ctk.CTkFont(size=13), text_color=TEXT_SEC).pack(pady=30)
+            ctk.CTkLabel(self._hist_body, text="Belum ada transaksi ditemukan.", font=ctk.CTkFont(size=13), text_color=TEXT_SEC).pack(pady=30)
             return
             
         start = self._hist_page * ROWS_PER_PAGE
@@ -519,9 +566,17 @@ class SalesScreen(ctk.CTkFrame):
             if record:
                 code = record.get("item_code")
                 qty = record.get("qty_sold", 0)
+                
                 try: item = self.inventory_manager.get_item(code)
-                except AttributeError: item = self.inventory_manager.search_by_code(code)
+                except AttributeError:
+                    try: item = self.inventory_manager.search_by_code(code)
+                    except AttributeError: item = None
                     
+                if not item:
+                    item = self.inventory_manager.restore_from_soldout(code)
+                    if item:
+                        self.inventory_manager.add_item(item)
+                        
                 if item:
                     new_qty = item.get("qty", item.get("jumlah", 0)) + qty
                     updated = dict(item)
@@ -533,6 +588,7 @@ class SalesScreen(ctk.CTkFrame):
             
             dlg.destroy()
             self._load_history()
+            self._pos_search_items()
             self._toast("Transaksi berhasil dibatalkan!")
             
         ctk.CTkButton(br, text="Tidak", width=80, fg_color="transparent", text_color=TEXT_PRI, border_width=1, command=dlg.destroy).pack(side="left", padx=10)

@@ -12,6 +12,62 @@ TEXT_SEC_DARK   = "#8A9AAA"
 WHITE           = "#FFFFFF"
 
 
+class DialogTambahUser(ctk.CTkToplevel):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.title("Tambah User Baru")
+        self.geometry("400x290")
+        
+        # Mengatur agar jendela ini selalu berada di atas layar utama
+        self.transient(master)
+        # Menahan klik di layar utama sampai dialog ini ditutup
+        self.grab_set()
+
+        # Menambahkan teks judul di bagian atas dialog
+        judul = ctk.CTkLabel(self, text="Form Tambah User", font=ctk.CTkFont(size=20, weight="bold"))
+        judul.pack(pady=(20, 10))
+
+        # Kolom isian untuk nama pengguna
+        self.input_username = ctk.CTkEntry(self, placeholder_text="Masukkan Username", width=300)
+        self.input_username.pack(pady=10)
+
+        # Kolom isian untuk kata sandi
+        self.input_password = ctk.CTkEntry(self, placeholder_text="Masukkan Password", show="*", width=300)
+        self.input_password.pack(pady=10)
+
+        # Tombol untuk menyimpan data
+        tombol_simpan = ctk.CTkButton(self, text="Simpan", command=self.simpan_data)
+        tombol_simpan.pack(pady=(20, 5))
+
+        # Tombol untuk membatalkan dan menutup dialog
+        tombol_batal = ctk.CTkButton(self, text="Batal", fg_color="transparent", border_width=1, text_color=TEXT_PRI, command=self.destroy)
+        tombol_batal.pack(pady=5)
+
+    def simpan_data(self):
+        # Mengambil teks yang diketikkan di dalam form
+        username = self.input_username.get()
+        password = self.input_password.get()
+        
+        # Mencegah penyimpanan jika ada kolom yang masih kosong
+        if username == "" or password == "":
+            print("Gagal: Username dan password harus diisi terlebih dahulu!")
+            return
+            
+        # Menyimpan data langsung ke dalam file .env.txt
+        try:
+            with open(".env.txt", mode="a", encoding="utf-8") as file:
+                # Menambahkan baris baru dengan format yang sesuai
+                file.write(f"\nUSER_EMAIL={username}")
+                file.write(f"\nUSER_PASSWORD={password}")
+                
+            print(f"Berhasil: User '{username}' sudah ditambahkan ke .env.txt!")
+            
+            # Menutup jendela secara otomatis setelah berhasil disimpan
+            self.destroy()
+            
+        except Exception as e:
+            print(f"Terjadi masalah saat menyimpan data: {e}")
+
 class SidebarBtn(ctk.CTkFrame):
     def __init__(self, master, text, icon, command, **kwargs):
         super().__init__(master, fg_color="transparent", corner_radius=10,
@@ -33,7 +89,7 @@ class SidebarBtn(ctk.CTkFrame):
             self.configure(fg_color=NAV_ACTIVE_DARK if dark else NAV_ACTIVE)
             self._icon_lbl.configure(text_color=PRIMARY)
             self._text_lbl.configure(text_color=PRIMARY,
-                                      font=ctk.CTkFont(size=13, weight="bold"))
+                                     font=ctk.CTkFont(size=13, weight="bold"))
         else:
             self.configure(fg_color="transparent")
             col = TEXT_SEC_DARK if dark else TEXT_SEC
@@ -65,7 +121,8 @@ class IndexScreen(ctk.CTkFrame):
         self._sidebar = ctk.CTkFrame(self, fg_color=SIDEBAR_BG, width=220, corner_radius=0)
         self._sidebar.grid(row=0, column=0, sticky="nsew")
         self._sidebar.grid_propagate(False)
-        self._sidebar.grid_rowconfigure(5, weight=1)
+        # Baris kosong digeser ke angka 6 karena kita menambahkan tombol baru
+        self._sidebar.grid_rowconfigure(6, weight=1)
         self._sidebar.grid_columnconfigure(0, weight=1)
 
         logo = ctk.CTkFrame(self._sidebar, fg_color="transparent")
@@ -96,15 +153,22 @@ class IndexScreen(ctk.CTkFrame):
 
         ctk.CTkFrame(self._sidebar, height=1, fg_color="#C5D8EA").grid(
             row=3, column=0, sticky="ew", padx=12, pady=4)
+        
         SidebarBtn(self._sidebar, text="Logout", icon="🚪",
                    command=self._on_logout).grid(
             row=4, column=0, sticky="ew", padx=8, pady=2)
-        ctk.CTkFrame(self._sidebar, fg_color="transparent").grid(
-            row=5, column=0, sticky="nsew")
+        
+        # Tombol Tambah User yang memanggil fungsi memunculkan dialog
+        SidebarBtn(self._sidebar, text="Tambah User", icon="👤",
+                   command=self._on_tambah_user).grid(
+            row=5, column=0, sticky="ew", padx=8, pady=2)
 
-        # Theme toggle
+        ctk.CTkFrame(self._sidebar, fg_color="transparent").grid(
+            row=6, column=0, sticky="nsew")
+
+        # Theme toggle digeser ke baris 7
         tgl = ctk.CTkFrame(self._sidebar, fg_color="#C5D8EA", corner_radius=10)
-        tgl.grid(row=6, column=0, sticky="ew", padx=12, pady=(0,16))
+        tgl.grid(row=7, column=0, sticky="ew", padx=12, pady=(0,16))
         tgl.grid_columnconfigure((0,1), weight=1)
         self._light_btn = ctk.CTkButton(
             tgl, text="☀ Light", height=34,
@@ -177,3 +241,9 @@ class IndexScreen(ctk.CTkFrame):
         self._pages.clear()
         if self._active_page:
             self.navigate(self._active_page)
+
+    def _on_tambah_user(self):
+        # Membuka form dialog yang sudah kita buat di atas
+        dialog = DialogTambahUser(self)
+        # Memastikan jendela dialog langsung aktif dan siap diketik
+        dialog.focus()
